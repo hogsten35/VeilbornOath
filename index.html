@@ -1,0 +1,1096 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Veilborn Oath — Three.js Prototype</title>
+
+  <style>
+    html, body { margin:0; height:100%; overflow:hidden; background:#07080a; font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial; }
+    canvas { display:block; }
+
+    /* HUD */
+    #hud {
+      position: fixed;
+      top: 12px; left: 12px;
+      padding: 10px 12px;
+      border-radius: 14px;
+      background: rgba(10, 14, 20, 0.66);
+      color: #e9eef7;
+      border: 1px solid rgba(255,255,255,0.10);
+      backdrop-filter: blur(10px);
+      max-width: 460px;
+      user-select: none;
+    }
+    #hud .title { font-weight: 800; letter-spacing: 0.3px; }
+    #hud .sub { opacity: 0.9; margin-top: 4px; font-size: 13px; }
+    #hud .row { display:flex; gap:10px; flex-wrap: wrap; margin-top: 8px; }
+    .pill {
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding: 6px 10px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.10);
+      font-size: 13px;
+    }
+
+    /* Party panel */
+    #partyPanel {
+      position: fixed;
+      right: 12px;
+      top: 12px;
+      width: min(360px, 40vw);
+      padding: 10px 12px;
+      border-radius: 14px;
+      background: rgba(10, 14, 20, 0.66);
+      color: #e9eef7;
+      border: 1px solid rgba(255,255,255,0.10);
+      backdrop-filter: blur(10px);
+      user-select: none;
+    }
+    .member {
+      display:flex;
+      justify-content: space-between;
+      align-items: baseline;
+      padding: 8px 10px;
+      border-radius: 12px;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.08);
+      margin-top: 8px;
+    }
+    .member:first-child { margin-top: 0; }
+    .mname { font-weight: 800; }
+    .mstats { font-size: 13px; opacity: 0.92; display:flex; gap:10px; flex-wrap:wrap; justify-content: flex-end; }
+    .dead { opacity: 0.45; filter: grayscale(1); }
+
+    /* Battle UI */
+    #battleUI {
+      position: fixed;
+      left: 12px;
+      bottom: 12px;
+      right: 12px;
+      display: none;
+      gap: 12px;
+      align-items: stretch;
+    }
+    #actionBox, #logBox {
+      border-radius: 16px;
+      background: rgba(10, 14, 20, 0.66);
+      border: 1px solid rgba(255,255,255,0.10);
+      backdrop-filter: blur(10px);
+      color: #e9eef7;
+      padding: 10px 12px;
+    }
+    #actionBox { flex: 0 0 380px; max-width: 45vw; }
+    #logBox { flex: 1; min-width: 0; }
+    #log {
+      font-size: 13px;
+      opacity: 0.95;
+      line-height: 1.35;
+      max-height: 140px;
+      overflow: auto;
+      padding-right: 6px;
+    }
+    .btnrow { display:flex; gap:10px; flex-wrap: wrap; margin-top: 10px; }
+    button {
+      border: 0;
+      border-radius: 12px;
+      padding: 10px 12px;
+      background: rgba(255,255,255,0.12);
+      border: 1px solid rgba(255,255,255,0.14);
+      color: #e9eef7;
+      font-weight: 800;
+      cursor: pointer;
+    }
+    button.primary { background: #2a66ff; border-color: rgba(42,102,255,0.55); }
+    button:disabled { opacity: 0.45; cursor:not-allowed; }
+
+    /* Overlay (start / victory / defeat) */
+    #overlay {
+      position: fixed;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      background: radial-gradient(1200px 900px at 50% 38%, rgba(35,50,80,0.42), rgba(0,0,0,0.92));
+      color: #eef3ff;
+      padding: 20px;
+    }
+    #panel {
+      width: min(860px, 94vw);
+      border-radius: 18px;
+      background: rgba(12, 16, 24, 0.76);
+      border: 1px solid rgba(255,255,255,0.10);
+      box-shadow: 0 24px 90px rgba(0,0,0,0.60);
+      padding: 18px 18px 16px;
+      backdrop-filter: blur(10px);
+      text-align: left;
+    }
+    #panel h1 { margin: 0 0 10px; font-size: 28px; letter-spacing: 0.4px; }
+    #panel p { margin: 8px 0; opacity: 0.92; }
+    #panel .grid {
+      display:grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+      margin-top: 12px;
+    }
+    #panel .card {
+      border-radius: 14px;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.10);
+      padding: 10px 12px;
+      font-size: 14px;
+    }
+    #panel .btnrow { margin-top: 14px; justify-content: flex-start; }
+
+    /* Floating damage numbers (DOM) */
+    .dmg {
+      position: fixed;
+      left: 0; top: 0;
+      transform: translate(-9999px, -9999px);
+      pointer-events: none;
+      font-weight: 900;
+      text-shadow: 0 2px 10px rgba(0,0,0,0.70);
+      user-select: none;
+      white-space: nowrap;
+    }
+  </style>
+
+  <!-- Three.js via importmap (no build step) -->
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+        "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+      }
+    }
+  </script>
+</head>
+
+<body>
+  <div id="hud">
+    <div class="title">Veilborn Oath — 3D Prototype</div>
+    <div class="sub">Explore → encounter zones → turn-based battle → return to world.</div>
+    <div class="row">
+      <div class="pill">Mode: <b id="mode">WORLD</b></div>
+      <div class="pill">Boss cleared: <b id="bossFlag">no</b></div>
+      <div class="pill">Cooldown: <b id="cd">0.0</b>s</div>
+    </div>
+    <div class="sub" style="margin-top:8px;">
+      WASD move • Shift sprint • Q/E rotate camera • Enter zones to battle • R restart
+    </div>
+  </div>
+
+  <div id="partyPanel"></div>
+
+  <div id="battleUI">
+    <div id="actionBox">
+      <div style="font-weight:900;">Actions</div>
+      <div style="opacity:0.88; font-size:13px; margin-top:4px;" id="turnLabel">—</div>
+      <div class="btnrow" id="actionButtons"></div>
+      <div style="opacity:0.80; font-size:12.5px; margin-top:10px;">
+        Rule: <b>Dread Art</b> only at <b>100</b> dread; it consumes to <b>0</b>.
+      </div>
+      <div style="opacity:0.80; font-size:12.5px; margin-top:6px;">
+        No enemy HP bars — enemy HP is hidden.
+      </div>
+    </div>
+    <div id="logBox">
+      <div style="display:flex; justify-content: space-between; align-items: baseline;">
+        <div style="font-weight:900;">Battle Log</div>
+        <div style="opacity:0.75; font-size:12px;" id="enemyName">—</div>
+      </div>
+      <div id="log"></div>
+    </div>
+  </div>
+
+  <div id="overlay">
+    <div id="panel">
+      <h1 id="overlayTitle">Veilborn Oath — Three.js Prototype</h1>
+      <p id="overlayText">
+        This is a fresh browser prototype (not Godot). Placeholder geometry, but the gameplay loop is real.
+      </p>
+      <div class="grid">
+        <div class="card"><b>World</b><br/>WASD move, Shift sprint, Q/E rotates camera. Step into zones to trigger battles.</div>
+        <div class="card"><b>Battle</b><br/>Turn-based. Party of 3. Enemy HP hidden. Dread Art only at 100 (consumes).</div>
+        <div class="card"><b>Boss</b><br/>One zone is a boss trigger. Beat it once and it disables.</div>
+        <div class="card"><b>Damage numbers</b><br/>Floating numbers pop in 3D-space (projected to screen).</div>
+      </div>
+      <div class="btnrow">
+        <button class="primary" id="startBtn">Start Prototype</button>
+        <button id="resetBtn">Reset Run</button>
+      </div>
+      <p style="margin-top:10px; font-size:13px; opacity:0.85;">
+        Tip: wander into the glowing rings. The red ring is the boss.
+      </p>
+    </div>
+  </div>
+
+  <script type="module">
+    import * as THREE from "three";
+
+    // ---------------------------------------------
+    // Utilities
+    // ---------------------------------------------
+    const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+    const rand = (a, b) => a + Math.random() * (b - a);
+    const randi = (a, b) => Math.floor(rand(a, b + 1));
+    const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
+    const lerp = (a, b, t) => a + (b - a) * t;
+
+    const ui = {
+      mode: document.getElementById("mode"),
+      bossFlag: document.getElementById("bossFlag"),
+      cd: document.getElementById("cd"),
+      partyPanel: document.getElementById("partyPanel"),
+      overlay: document.getElementById("overlay"),
+      overlayTitle: document.getElementById("overlayTitle"),
+      overlayText: document.getElementById("overlayText"),
+      startBtn: document.getElementById("startBtn"),
+      resetBtn: document.getElementById("resetBtn"),
+      battleUI: document.getElementById("battleUI"),
+      actionButtons: document.getElementById("actionButtons"),
+      turnLabel: document.getElementById("turnLabel"),
+      log: document.getElementById("log"),
+      enemyName: document.getElementById("enemyName")
+    };
+
+    function logLine(s) {
+      const div = document.createElement("div");
+      div.textContent = s;
+      ui.log.appendChild(div);
+      ui.log.scrollTop = ui.log.scrollHeight;
+    }
+
+    // ---------------------------------------------
+    // Data (prototype stats)
+    // ---------------------------------------------
+    const Party = [
+      { id:"cael", name:"Cael", hpMax:120, hp:120, atk:16, def:8, spd:10, dread:0, skillName:"Cleave", skillType:"dmg", skillMul:1.25 },
+      { id:"serah", name:"Serah Mourn", hpMax:95, hp:95, atk:14, def:6, spd:14, dread:0, skillName:"Sunder", skillType:"dmg", skillMul:1.15 },
+      { id:"iri", name:"Iri Voss", hpMax:105, hp:105, atk:12, def:7, spd:9, dread:0, skillName:"Mend", skillType:"heal", healAmt:26 }
+    ];
+
+    const EnemyDB = {
+      sewer_gnawer: { id:"sewer_gnawer", name:"Sewer Gnawer", hp:60, atk:10, def:4, spd:8 },
+      thread_mite: { id:"thread_mite", name:"Thread Mite", hp:45, atk:9, def:3, spd:12 },
+      lantern_thief: { id:"lantern_thief", name:"Lantern Thief", hp:70, atk:12, def:5, spd:10 },
+      knot_wisp: { id:"knot_wisp", name:"Knot Wisp", hp:55, atk:11, def:4, spd:13 },
+      thicket_stalker: { id:"thicket_stalker", name:"Thicket Stalker", hp:110, atk:18, def:8, spd:12 },
+      knotling_matron: { id:"knotling_matron", name:"Knotling Matron", hp:320, atk:22, def:10, spd:9, boss:true }
+    };
+
+    const Pools = {
+      easy: ["sewer_gnawer", "thread_mite", "lantern_thief"],
+      mid:  ["knot_wisp", "lantern_thief", "sewer_gnawer"],
+      hard: ["thicket_stalker", "knot_wisp", "lantern_thief"]
+    };
+
+    // ---------------------------------------------
+    // Game state
+    // ---------------------------------------------
+    const Mode = { WORLD:"WORLD", BATTLE:"BATTLE" };
+    let mode = Mode.WORLD;
+
+    let bossCleared = false;
+    let encounterCooldown = 0.0;
+
+    // World return
+    const worldReturn = { pos: new THREE.Vector3(0, 0, 0), yaw: 0 };
+
+    // Battle state
+    let enemy = null; // {id,name,hp,atk,def,spd,boss}
+    let battle = {
+      active: false,
+      phase: "idle", // "player_turn" | "enemy_turn" | "anim"
+      actorIndex: 0,
+      aliveOrder: [],
+      pendingSkill: null
+    };
+
+    // ---------------------------------------------
+    // Three.js setup
+    // ---------------------------------------------
+    const renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+    renderer.setSize(innerWidth, innerHeight);
+    renderer.shadowMap.enabled = true;
+    document.body.appendChild(renderer.domElement);
+
+    const scene = new THREE.Scene();
+    scene.fog = new THREE.Fog(0x07080a, 35, 220);
+
+    const camera = new THREE.PerspectiveCamera(70, innerWidth / innerHeight, 0.1, 500);
+    camera.position.set(0, 6, 10);
+
+    // Lights
+    scene.add(new THREE.HemisphereLight(0xbad4ff, 0x0b0d10, 0.6));
+    const moon = new THREE.DirectionalLight(0xe6f2ff, 1.05);
+    moon.position.set(40, 60, 30);
+    moon.castShadow = true;
+    moon.shadow.mapSize.set(1024, 1024);
+    moon.shadow.camera.near = 1;
+    moon.shadow.camera.far = 260;
+    moon.shadow.camera.left = -110;
+    moon.shadow.camera.right = 110;
+    moon.shadow.camera.top = 110;
+    moon.shadow.camera.bottom = -110;
+    scene.add(moon);
+
+    // Ground
+    const ground = new THREE.Mesh(
+      new THREE.PlaneGeometry(260, 260),
+      new THREE.MeshStandardMaterial({ color: 0x0f141b, roughness: 1.0, metalness: 0.0 })
+    );
+    ground.rotation.x = -Math.PI / 2;
+    ground.receiveShadow = true;
+    scene.add(ground);
+
+    // ---------------------------------------------
+    // World objects
+    // ---------------------------------------------
+    const worldGroup = new THREE.Group();
+    scene.add(worldGroup);
+
+    const battleGroup = new THREE.Group();
+    battleGroup.visible = false;
+    scene.add(battleGroup);
+
+    // Player rig (simple capsule-like look)
+    const player = {
+      obj: new THREE.Group(),
+      pos: new THREE.Vector3(0, 0, 0),
+      vel: new THREE.Vector3(0, 0, 0),
+      yaw: 0,
+      speed: 8.0,
+      sprintSpeed: 12.0,
+      radius: 0.55
+    };
+
+    function buildPlayer() {
+      player.obj.clear();
+
+      const body = new THREE.Mesh(
+        new THREE.CapsuleGeometry(0.45, 0.9, 6, 12),
+        new THREE.MeshStandardMaterial({ color: 0x88a1b8, roughness: 0.95 })
+      );
+      body.castShadow = true;
+      body.position.y = 1.05;
+
+      const cloak = new THREE.Mesh(
+        new THREE.ConeGeometry(0.75, 1.1, 10),
+        new THREE.MeshStandardMaterial({ color: 0x232a36, roughness: 1.0 })
+      );
+      cloak.castShadow = true;
+      cloak.position.y = 0.85;
+
+      player.obj.add(cloak, body);
+      player.obj.position.copy(player.pos);
+      worldGroup.add(player.obj);
+    }
+    buildPlayer();
+
+    // Obstacles (for vibe + simple collision)
+    const obstacles = [];
+    function addRock(x, z, s = 1.0, c = 0x1b2a3a) {
+      const m = new THREE.Mesh(
+        new THREE.DodecahedronGeometry(s, 0),
+        new THREE.MeshStandardMaterial({ color: c, roughness: 1.0 })
+      );
+      m.position.set(x, s * 0.9, z);
+      m.castShadow = true;
+      m.receiveShadow = true;
+      worldGroup.add(m);
+      obstacles.push({ mesh: m, r: s * 0.9 });
+    }
+    for (let i = 0; i < 18; i++) addRock(rand(-85,85), rand(-85,85), rand(1.2, 3.0), (i%3===0)?0x1a2230:0x223145);
+
+    // Encounter zones (rings)
+    const zones = [];
+    function addZone(x, z, r, kind, label) {
+      const ring = new THREE.Mesh(
+        new THREE.RingGeometry(r - 0.18, r, 54),
+        new THREE.MeshBasicMaterial({ color: kind === "boss" ? 0xff4a4a : 0x46ff9a, transparent: true, opacity: 0.26, side: THREE.DoubleSide })
+      );
+      ring.rotation.x = -Math.PI / 2;
+      ring.position.set(x, 0.06, z);
+      worldGroup.add(ring);
+
+      const beacon = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.22, 0.35, 2.4, 10),
+        new THREE.MeshStandardMaterial({ color: kind === "boss" ? 0x4a1b1b : 0x1f3a2d, roughness: 1.0 })
+      );
+      beacon.position.set(x, 1.2, z);
+      beacon.castShadow = true;
+      worldGroup.add(beacon);
+
+      zones.push({ x, z, r, kind, label, ring, beacon, enabled: true });
+    }
+
+    addZone(-40, 28, 4.0, "encounter", "easy");
+    addZone( 35,-18, 4.0, "encounter", "mid");
+    addZone( 15, 55, 4.0, "encounter", "hard");
+    addZone( 60, 60, 5.0, "boss",     "boss_knotling_matron");
+
+    // ---------------------------------------------
+    // Battle visuals
+    // ---------------------------------------------
+    const battleviz = {
+      partyMeshes: [],
+      enemyMesh: null,
+      arena: null
+    };
+
+    function buildBattleScene() {
+      battleGroup.clear();
+      battleviz.partyMeshes = [];
+      battleviz.enemyMesh = null;
+
+      const floor = new THREE.Mesh(
+        new THREE.CircleGeometry(18, 64),
+        new THREE.MeshStandardMaterial({ color: 0x111925, roughness: 1.0 })
+      );
+      floor.rotation.x = -Math.PI / 2;
+      floor.receiveShadow = true;
+      floor.position.set(0, 0.02, 0);
+      battleGroup.add(floor);
+      battleviz.arena = floor;
+
+      // Some moody pillars
+      for (let i=0;i<8;i++){
+        const a = (i/8)*Math.PI*2;
+        const p = new THREE.Mesh(
+          new THREE.CylinderGeometry(0.6, 0.8, rand(4.0, 8.0), 12),
+          new THREE.MeshStandardMaterial({ color: 0x1a2230, roughness: 1.0 })
+        );
+        p.position.set(Math.cos(a)*14, 2.4, Math.sin(a)*14);
+        p.castShadow = true;
+        battleGroup.add(p);
+      }
+
+      // Party positions (left)
+      const partyPos = [new THREE.Vector3(-7,0, -3), new THREE.Vector3(-8,0, 0), new THREE.Vector3(-7,0, 3)];
+      for (let i=0;i<3;i++){
+        const mesh = new THREE.Mesh(
+          new THREE.CapsuleGeometry(0.38, 0.8, 6, 10),
+          new THREE.MeshStandardMaterial({ color: 0x88a1b8, roughness: 0.95 })
+        );
+        mesh.position.copy(partyPos[i]).add(new THREE.Vector3(0, 1.05, 0));
+        mesh.castShadow = true;
+        battleGroup.add(mesh);
+        battleviz.partyMeshes.push(mesh);
+      }
+
+      // Enemy placeholder (right)
+      const em = new THREE.Mesh(
+        new THREE.SphereGeometry(1.35, 18, 14),
+        new THREE.MeshStandardMaterial({ color: 0x7d8aa1, roughness: 0.9, metalness: 0.0 })
+      );
+      em.position.set(7.5, 1.6, 0);
+      em.castShadow = true;
+      battleGroup.add(em);
+      battleviz.enemyMesh = em;
+    }
+    buildBattleScene();
+
+    // ---------------------------------------------
+    // Input
+    // ---------------------------------------------
+    const keys = { w:false, a:false, s:false, d:false, shift:false, q:false, e:false };
+    addEventListener("keydown", (ev) => {
+      if (ev.code === "KeyW") keys.w = true;
+      if (ev.code === "KeyA") keys.a = true;
+      if (ev.code === "KeyS") keys.s = true;
+      if (ev.code === "KeyD") keys.d = true;
+      if (ev.code === "ShiftLeft" || ev.code === "ShiftRight") keys.shift = true;
+      if (ev.code === "KeyQ") keys.q = true;
+      if (ev.code === "KeyE") keys.e = true;
+
+      if (ev.code === "KeyR") resetRun();
+    });
+    addEventListener("keyup", (ev) => {
+      if (ev.code === "KeyW") keys.w = false;
+      if (ev.code === "KeyA") keys.a = false;
+      if (ev.code === "KeyS") keys.s = false;
+      if (ev.code === "KeyD") keys.d = false;
+      if (ev.code === "ShiftLeft" || ev.code === "ShiftRight") keys.shift = false;
+      if (ev.code === "KeyQ") keys.q = false;
+      if (ev.code === "KeyE") keys.e = false;
+    });
+
+    // ---------------------------------------------
+    // Party UI rendering
+    // ---------------------------------------------
+    function renderPartyPanel() {
+      ui.partyPanel.innerHTML = `<div style="font-weight:900; margin-bottom:8px;">Party</div>`;
+      for (const m of Party) {
+        const dead = m.hp <= 0;
+        const dreadReady = m.dread >= 100;
+        ui.partyPanel.innerHTML += `
+          <div class="member ${dead ? "dead":""}">
+            <div>
+              <div class="mname">${m.name}</div>
+              <div style="opacity:0.8; font-size:12px; margin-top:2px;">
+                ${dead ? "Down" : (dreadReady ? "Dread Art READY" : "—")}
+              </div>
+            </div>
+            <div class="mstats">
+              <span>HP <b>${m.hp}</b>/${m.hpMax}</span>
+              <span>Dread <b>${Math.floor(m.dread)}</b>/100</span>
+            </div>
+          </div>
+        `;
+      }
+    }
+
+    // ---------------------------------------------
+    // Floating damage numbers
+    // ---------------------------------------------
+    const dmgNums = []; // {el, pos:Vector3, velY, t, life, size, color}
+    function spawnDmg(text, worldPos, crit=false, heal=false) {
+      const el = document.createElement("div");
+      el.className = "dmg";
+      el.textContent = text;
+      el.style.fontSize = crit ? "30px" : "22px";
+      el.style.color = heal ? "#7dffb2" : (crit ? "#ffd24a" : "#eef3ff");
+      el.style.opacity = "1";
+      document.body.appendChild(el);
+
+      dmgNums.push({
+        el,
+        pos: worldPos.clone(),
+        velY: crit ? 1.25 : 1.0,
+        t: 0,
+        life: 0.85,
+        driftX: rand(-0.25, 0.25),
+        driftZ: rand(-0.25, 0.25)
+      });
+    }
+
+    function updateDmgNums(dt) {
+      for (let i = dmgNums.length - 1; i >= 0; i--) {
+        const n = dmgNums[i];
+        n.t += dt;
+        const a = 1.0 - (n.t / n.life);
+        if (a <= 0) {
+          n.el.remove();
+          dmgNums.splice(i, 1);
+          continue;
+        }
+        n.pos.y += n.velY * dt;
+        n.pos.x += n.driftX * dt;
+        n.pos.z += n.driftZ * dt;
+
+        const p = n.pos.clone().project(camera);
+        const x = (p.x * 0.5 + 0.5) * innerWidth;
+        const y = (-p.y * 0.5 + 0.5) * innerHeight;
+        n.el.style.transform = `translate(${x}px, ${y}px) translate(-50%, -50%)`;
+        n.el.style.opacity = String(a);
+      }
+    }
+
+    // ---------------------------------------------
+    // Collision helpers (very light)
+    // ---------------------------------------------
+    function pushOutOfObstacles(nextPos) {
+      for (const o of obstacles) {
+        const dx = nextPos.x - o.mesh.position.x;
+        const dz = nextPos.z - o.mesh.position.z;
+        const dist = Math.hypot(dx, dz);
+        const minDist = player.radius + o.r;
+        if (dist < minDist) {
+          const t = (minDist - dist) / Math.max(dist, 0.0001);
+          nextPos.x += dx * t;
+          nextPos.z += dz * t;
+        }
+      }
+    }
+
+    // ---------------------------------------------
+    // Battle mechanics
+    // ---------------------------------------------
+    function anyPartyAlive() {
+      return Party.some(m => m.hp > 0);
+    }
+    function alivePartyIndices() {
+      const out = [];
+      for (let i=0;i<Party.length;i++) if (Party[i].hp > 0) out.push(i);
+      return out;
+    }
+
+    function addDread(idx, amount) {
+      Party[idx].dread = clamp(Party[idx].dread + amount, 0, 100);
+    }
+    function consumeDreadIfFull(idx) {
+      if (Party[idx].dread >= 100) {
+        Party[idx].dread = 0;
+        return true;
+      }
+      return false;
+    }
+
+    function rollCrit() { return Math.random() < 0.10; }
+
+    function calcDamage(atk, def, mult=1.0) {
+      const base = Math.max(1, Math.floor((atk - def) * mult + rand(-2, 2)));
+      return base;
+    }
+
+    function startBattle(enemyId, isBoss=false) {
+      // Save return
+      worldReturn.pos.copy(player.pos);
+      worldReturn.yaw = player.yaw;
+
+      // Setup enemy
+      const e = { ...EnemyDB[enemyId] };
+      enemy = e;
+
+      // Show / hide groups
+      mode = Mode.BATTLE;
+      ui.mode.textContent = "BATTLE";
+      worldGroup.visible = false;
+      battleGroup.visible = true;
+      ui.battleUI.style.display = "flex";
+
+      // Camera position for battle
+      player.obj.visible = false;
+      camera.position.set(0, 10.5, 16.5);
+      camera.lookAt(0, 1.4, 0);
+
+      // Change enemy mesh vibe if boss
+      if (battleviz.enemyMesh) {
+        battleviz.enemyMesh.scale.setScalar(e.boss ? 1.35 : 1.0);
+        battleviz.enemyMesh.material.color.setHex(e.boss ? 0x8a2b2b : 0x7d8aa1);
+      }
+
+      // Battle init
+      battle.active = true;
+      battle.phase = "player_turn";
+      battle.actorIndex = 0;
+      battle.aliveOrder = alivePartyIndices(); // could sort by spd later
+      ui.enemyName.textContent = e.name + " (HP hidden)";
+      ui.log.innerHTML = "";
+      logLine(`Encounter! ${e.name} appears.`);
+      logLine(`Enemy HP is hidden. Fight smart.`);
+
+      renderPartyPanel();
+      renderActionUI();
+    }
+
+    function endBattle(victory) {
+      battle.active = false;
+      enemy = null;
+
+      // Back to world
+      mode = Mode.WORLD;
+      ui.mode.textContent = "WORLD";
+      worldGroup.visible = true;
+      battleGroup.visible = false;
+      ui.battleUI.style.display = "none";
+
+      // Restore player and camera follow
+      player.obj.visible = true;
+      player.pos.copy(worldReturn.pos);
+      player.yaw = worldReturn.yaw;
+      player.obj.position.copy(player.pos);
+
+      // Start cooldown so you don't chain-battle immediately
+      encounterCooldown = 2.2;
+
+      renderPartyPanel();
+
+      // Overlay result
+      ui.overlay.style.display = "grid";
+      ui.overlayTitle.textContent = victory ? "Victory" : "Defeat";
+      ui.overlayText.textContent = victory
+        ? "You survive the clash. The road opens again."
+        : "You fall back. You regroup at the last safe footing.";
+
+      ui.startBtn.textContent = "Continue";
+    }
+
+    function renderActionUI() {
+      ui.actionButtons.innerHTML = "";
+      if (!battle.active || battle.phase !== "player_turn") {
+        ui.turnLabel.textContent = battle.active ? "Enemy thinking..." : "—";
+        return;
+      }
+
+      // Ensure actor index points to a living member
+      battle.aliveOrder = alivePartyIndices();
+      if (battle.aliveOrder.length === 0) return;
+      const actIdx = battle.aliveOrder[battle.actorIndex % battle.aliveOrder.length];
+      const actor = Party[actIdx];
+
+      ui.turnLabel.textContent = `${actor.name}'s turn`;
+
+      // Buttons
+      const btnAttack = document.createElement("button");
+      btnAttack.className = "primary";
+      btnAttack.textContent = "Attack";
+      btnAttack.onclick = () => playerAttack(actIdx, 1.0);
+
+      const btnSkill = document.createElement("button");
+      btnSkill.textContent = actor.skillName;
+      btnSkill.onclick = () => playerSkill(actIdx);
+
+      const btnDread = document.createElement("button");
+      btnDread.textContent = "Dread Art";
+      btnDread.disabled = actor.dread < 100;
+      btnDread.onclick = () => playerDreadArt(actIdx);
+
+      ui.actionButtons.append(btnAttack, btnSkill, btnDread);
+    }
+
+    function advanceTurnToNextLiving() {
+      const living = alivePartyIndices();
+      battle.aliveOrder = living;
+      if (living.length === 0) return;
+      battle.actorIndex = (battle.actorIndex + 1) % living.length;
+    }
+
+    function playerAttack(idx, mult=1.0) {
+      if (!enemy) return;
+      const actor = Party[idx];
+
+      const crit = rollCrit();
+      let dmg = calcDamage(actor.atk, enemy.def, mult);
+      if (crit) dmg = Math.floor(dmg * 1.9);
+
+      enemy.hp -= dmg;
+
+      // dread gain: simple prototype formula (tunable)
+      addDread(idx, dmg * 0.35 + (crit ? 10 : 0));
+
+      logLine(`${actor.name} attacks! ${crit ? "CRIT! " : ""}(${dmg})`);
+
+      // Damage number at enemy
+      if (battleviz.enemyMesh) spawnDmg(String(dmg), battleviz.enemyMesh.position.clone(), crit, false);
+
+      renderPartyPanel();
+
+      if (enemy.hp <= 0) {
+        logLine(`${enemy.name} collapses.`);
+        // If boss, flag it
+        if (enemy.boss) bossCleared = true;
+        setTimeout(() => endBattle(true), 500);
+        return;
+      }
+
+      // Next: enemy turn after last party member acts
+      advanceTurnToNextLiving();
+      if (battle.actorIndex === 0) {
+        battle.phase = "enemy_turn";
+        renderActionUI();
+        setTimeout(enemyTurn, 550);
+      } else {
+        renderActionUI();
+      }
+    }
+
+    function playerSkill(idx) {
+      const actor = Party[idx];
+      if (!enemy) return;
+
+      if (actor.skillType === "heal") {
+        // Heal lowest living ally (including self)
+        const living = alivePartyIndices();
+        let best = living[0];
+        let bestMissing = -1;
+        for (const i of living) {
+          const miss = Party[i].hpMax - Party[i].hp;
+          if (miss > bestMissing) { bestMissing = miss; best = i; }
+        }
+        const amt = actor.healAmt;
+        Party[best].hp = clamp(Party[best].hp + amt, 0, Party[best].hpMax);
+
+        // dread gain smaller for heals
+        addDread(idx, 12);
+
+        logLine(`${actor.name} uses ${actor.skillName} on ${Party[best].name} (+${amt}).`);
+        if (battleviz.partyMeshes[best]) spawnDmg(`+${amt}`, battleviz.partyMeshes[best].position.clone(), false, true);
+
+        renderPartyPanel();
+
+        advanceTurnToNextLiving();
+        if (battle.actorIndex === 0) {
+          battle.phase = "enemy_turn";
+          renderActionUI();
+          setTimeout(enemyTurn, 550);
+        } else {
+          renderActionUI();
+        }
+        return;
+      }
+
+      // Damage skill
+      playerAttack(idx, actor.skillMul);
+    }
+
+    function playerDreadArt(idx) {
+      if (!enemy) return;
+      const actor = Party[idx];
+      if (!consumeDreadIfFull(idx)) return;
+
+      const crit = false; // dread art is consistent, not crit in this proto
+      const dmg = Math.max(1, Math.floor((actor.atk * 2.1) - enemy.def + rand(0, 6)));
+      enemy.hp -= dmg;
+
+      logLine(`${actor.name} unleashes a Dread Art! (${dmg})`);
+      if (battleviz.enemyMesh) spawnDmg(String(dmg), battleviz.enemyMesh.position.clone(), true, false);
+
+      renderPartyPanel();
+
+      if (enemy.hp <= 0) {
+        logLine(`${enemy.name} is severed from the field.`);
+        if (enemy.boss) bossCleared = true;
+        setTimeout(() => endBattle(true), 650);
+        return;
+      }
+
+      // Dread art counts as your turn
+      advanceTurnToNextLiving();
+      if (battle.actorIndex === 0) {
+        battle.phase = "enemy_turn";
+        renderActionUI();
+        setTimeout(enemyTurn, 650);
+      } else {
+        renderActionUI();
+      }
+    }
+
+    function enemyTurn() {
+      if (!battle.active || !enemy) return;
+
+      const living = alivePartyIndices();
+      if (living.length === 0) {
+        setTimeout(() => endBattle(false), 500);
+        return;
+      }
+
+      const targetIdx = pick(living);
+      const target = Party[targetIdx];
+
+      const crit = rollCrit() && !enemy.boss ? true : (Math.random() < 0.06); // boss less critty in this proto
+      let dmg = calcDamage(enemy.atk, target.def, 1.0);
+      if (crit) dmg = Math.floor(dmg * 1.7);
+
+      target.hp = Math.max(0, target.hp - dmg);
+
+      // dread gain from taking damage: target gets more dread
+      addDread(targetIdx, dmg * 0.45 + (crit ? 6 : 0));
+
+      logLine(`${enemy.name} strikes ${target.name}! ${crit ? "CRIT! " : ""}(${dmg})`);
+      if (battleviz.partyMeshes[targetIdx]) spawnDmg(String(dmg), battleviz.partyMeshes[targetIdx].position.clone(), crit, false);
+
+      renderPartyPanel();
+
+      if (!anyPartyAlive()) {
+        logLine("The party is overwhelmed.");
+        setTimeout(() => endBattle(false), 650);
+        return;
+      }
+
+      // Back to player turn (next living actor)
+      battle.phase = "player_turn";
+      battle.actorIndex = 0;
+      renderActionUI();
+    }
+
+    // ---------------------------------------------
+    // World loop: movement, camera follow, zone triggers
+    // ---------------------------------------------
+    function cameraFollow(dt) {
+      // camera yaw controlled by Q/E
+      const rotSpeed = 1.8;
+      if (keys.q) player.yaw += rotSpeed * dt;
+      if (keys.e) player.yaw -= rotSpeed * dt;
+
+      // Follow behind player at an angle
+      const dist = 9.0;
+      const height = 5.0;
+
+      const behind = new THREE.Vector3(Math.sin(player.yaw), 0, Math.cos(player.yaw)).multiplyScalar(-dist);
+      const camPos = player.pos.clone().add(behind).add(new THREE.Vector3(0, height, 0));
+
+      // smooth camera
+      camera.position.x = lerp(camera.position.x, camPos.x, 1 - Math.pow(0.0005, dt));
+      camera.position.y = lerp(camera.position.y, camPos.y, 1 - Math.pow(0.0005, dt));
+      camera.position.z = lerp(camera.position.z, camPos.z, 1 - Math.pow(0.0005, dt));
+
+      camera.lookAt(player.pos.x, player.pos.y + 1.2, player.pos.z);
+    }
+
+    function worldMove(dt) {
+      const forward = new THREE.Vector3(Math.sin(player.yaw), 0, Math.cos(player.yaw));
+      const right = new THREE.Vector3(forward.z, 0, -forward.x);
+
+      const move = new THREE.Vector3();
+      if (keys.w) move.add(forward);
+      if (keys.s) move.sub(forward);
+      if (keys.d) move.add(right);
+      if (keys.a) move.sub(right);
+
+      const moving = move.lengthSq() > 0;
+      if (moving) move.normalize();
+
+      const spd = keys.shift ? player.sprintSpeed : player.speed;
+      const next = player.pos.clone().add(move.multiplyScalar(spd * dt));
+
+      // keep in bounds
+      next.x = clamp(next.x, -110, 110);
+      next.z = clamp(next.z, -110, 110);
+
+      // collision push
+      pushOutOfObstacles(next);
+
+      player.pos.copy(next);
+      player.obj.position.copy(player.pos);
+
+      // face movement direction slightly
+      if (moving) player.obj.rotation.y = Math.atan2(forward.x, forward.z) + Math.PI; // crude but works
+    }
+
+    function checkZones() {
+      if (encounterCooldown > 0) return;
+      for (const z of zones) {
+        if (!z.enabled) continue;
+        const d = Math.hypot(player.pos.x - z.x, player.pos.z - z.z);
+        if (d <= z.r) {
+          if (z.kind === "boss") {
+            if (bossCleared) return;
+            startBattle("knotling_matron", true);
+            return;
+          } else {
+            const pool = Pools[z.label] || Pools.easy;
+            startBattle(pick(pool), false);
+            return;
+          }
+        }
+      }
+    }
+
+    // ---------------------------------------------
+    // Reset / start
+    // ---------------------------------------------
+    function resetParty() {
+      Party[0].hp = Party[0].hpMax; Party[0].dread = 0;
+      Party[1].hp = Party[1].hpMax; Party[1].dread = 0;
+      Party[2].hp = Party[2].hpMax; Party[2].dread = 0;
+    }
+
+    function resetRun() {
+      // Clear floating numbers
+      while (dmgNums.length) { dmgNums.pop().el.remove(); }
+
+      bossCleared = false;
+      encounterCooldown = 0;
+
+      resetParty();
+      renderPartyPanel();
+
+      // Re-enable boss zone visuals
+      for (const z of zones) {
+        if (z.kind === "boss") {
+          z.enabled = true;
+          z.ring.material.opacity = 0.26;
+          z.ring.material.color.setHex(0xff4a4a);
+        }
+      }
+
+      // Back to world
+      mode = Mode.WORLD;
+      ui.mode.textContent = "WORLD";
+      worldGroup.visible = true;
+      battleGroup.visible = false;
+      ui.battleUI.style.display = "none";
+
+      player.pos.set(0, 0, 0);
+      player.yaw = 0;
+      player.obj.position.copy(player.pos);
+
+      ui.overlay.style.display = "none";
+      ui.startBtn.textContent = "Start Prototype";
+      ui.overlayTitle.textContent = "Veilborn Oath — Three.js Prototype";
+      ui.overlayText.textContent = "Fresh browser prototype. Placeholder geometry, real loop.";
+
+      logLine("—");
+    }
+
+    // Buttons
+    ui.startBtn.addEventListener("click", () => {
+      ui.overlay.style.display = "none";
+      if (mode === Mode.BATTLE && battle.active === false) {
+        // "Continue" from end-of-battle
+      }
+    });
+    ui.resetBtn.addEventListener("click", () => resetRun());
+
+    // ---------------------------------------------
+    // Main loop
+    // ---------------------------------------------
+    let last = performance.now();
+    function tick() {
+      requestAnimationFrame(tick);
+      const now = performance.now();
+      const dt = Math.min((now - last) / 1000, 0.033);
+      last = now;
+
+      // HUD
+      ui.bossFlag.textContent = bossCleared ? "YES" : "no";
+      ui.cd.textContent = encounterCooldown.toFixed(1);
+
+      if (encounterCooldown > 0) encounterCooldown = Math.max(0, encounterCooldown - dt);
+
+      // Disable boss ring after cleared
+      if (bossCleared) {
+        const bz = zones.find(z => z.kind === "boss");
+        if (bz) {
+          bz.enabled = false;
+          bz.ring.material.opacity = 0.10;
+          bz.ring.material.color.setHex(0x666666);
+        }
+      }
+
+      if (mode === Mode.WORLD) {
+        worldMove(dt);
+        cameraFollow(dt);
+        checkZones();
+      } else {
+        // Battle idle animation
+        if (battleviz.enemyMesh) {
+          battleviz.enemyMesh.rotation.y += dt * 0.7;
+          battleviz.enemyMesh.position.y = 1.6 + Math.sin(now * 0.003) * 0.08;
+        }
+      }
+
+      updateDmgNums(dt);
+      renderer.render(scene, camera);
+    }
+
+    // Resize
+    addEventListener("resize", () => {
+      camera.aspect = innerWidth / innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(innerWidth, innerHeight);
+    });
+
+    // Boot
+    renderPartyPanel();
+    renderActionUI();
+    // Keep overlay up until Start
+    // startBtn hides overlay; world loop already running
+    tick();
+
+    // Start the run on initial Start click
+    ui.startBtn.addEventListener("click", () => {
+      ui.overlay.style.display = "none";
+    });
+
+    // Ensure resetRun works from anywhere
+    window.resetRun = resetRun;
+    resetRun();
+  </script>
+</body>
+</html>
