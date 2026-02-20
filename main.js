@@ -95,10 +95,11 @@ const RetroDitherShader = {
   uniforms: {
     tDiffuse: { value: null },
     resolution: { value: new THREE.Vector2(640, 360) },
-    colorSteps: { value: new THREE.Vector3(26, 24, 22) }, // subtle PS1-ish reduction
-    ditherStrength: { value: 0.85 },
-    contrast: { value: 1.03 },
-    saturation: { value: 0.94 }
+    colorSteps: { value: new THREE.Vector3(34, 32, 30) }, // more shadow detail
+    ditherStrength: { value: 0.55 }, // less shadow crush
+    contrast: { value: 0.96 },       // reduce black crush
+    saturation: { value: 1.00 }      // restore color a bit
+
   },
   vertexShader: /* glsl */`
     varying vec2 vUv;
@@ -164,6 +165,8 @@ const renderer = new THREE.WebGLRenderer({ antialias: false, alpha: false, power
 renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 renderer.outputColorSpace = THREE.SRGBColorSpace;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.18;
 renderer.setClearColor(0x050608, 1);
 renderer.domElement.style.width = "100vw";
 renderer.domElement.style.height = "100vh";
@@ -207,10 +210,12 @@ function setRetroResolution() {
 // ---------------------------------------------
 // Lights
 // ---------------------------------------------
-const hemi = new THREE.HemisphereLight(0x6e87a8, 0x090b0f, 0.34);
+const hemi = new THREE.HemisphereLight(0x8fa8c8, 0x11151c, 0.62);
+
 scene.add(hemi);
 
-const keyMoon = new THREE.DirectionalLight(0xc8d8ff, 0.75);
+const keyMoon = new THREE.DirectionalLight(0xd7e4ff, 1.12);
+
 keyMoon.position.set(20, 28, 14);
 keyMoon.castShadow = true;
 keyMoon.shadow.mapSize.set(1024, 1024);
@@ -222,7 +227,8 @@ keyMoon.shadow.camera.top = 28;
 keyMoon.shadow.camera.bottom = -28;
 scene.add(keyMoon);
 
-const fillBlue = new THREE.PointLight(0x3a5f9a, 0.28, 40, 2.0);
+const fillBlue = new THREE.PointLight(0x5b88d0, 0.62, 52, 2.0);
+
 fillBlue.position.set(-8, 5, 6);
 scene.add(fillBlue);
 
@@ -1047,8 +1053,8 @@ function buildBattleScene() {
   battleviz.enemyActor.rimLight = enemyRim;
 
   // Battle-only glow lights (off until battle)
-  threadGlowCyan.intensity = 0.6;
-  threadGlowViolet.intensity = 0.42;
+  threadGlowCyan.intensity = 0.95;
+threadGlowViolet.intensity = 0.72;
 }
 buildBattleScene();
 
@@ -1385,8 +1391,8 @@ function updateActorVisuals(dt, nowSec) {
   // Room haze / thread glow pulse
   if (battleviz.threadScarGroup) {
     const pulse = 0.8 + Math.sin(nowSec * 1.3) * 0.12 + Math.sin(nowSec * 2.6 + 1.2) * 0.05;
-    threadGlowCyan.intensity = mode === Mode.BATTLE ? (0.45 * pulse) : 0.0;
-    threadGlowViolet.intensity = mode === Mode.BATTLE ? (0.33 * pulse) : 0.0;
+    threadGlowCyan.intensity = mode === Mode.BATTLE ? (0.78 * pulse) : 0.0;
+threadGlowViolet.intensity = mode === Mode.BATTLE ? (0.58 * pulse) : 0.0;
   }
 
   for (let i = 0; i < battleviz.haze.length; i++) {
