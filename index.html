@@ -3,75 +3,20 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Veilborn Oath — 3D Prototype</title>
+  <title>Veilborn Test</title>
   <link rel="stylesheet" href="./style.css" />
 </head>
 <body>
-  <!-- Top-left HUD -->
-  <div id="hudLeft" class="panel">
-    <div class="panel-edge"></div>
-    <div class="title">Veilborn Oath — 3D Prototype</div>
-    <div class="subtitle">Explore → encounter zones → turn-based battle → return to world.</div>
-
-    <div class="chips">
-      <div class="hudChip">Mode: <b id="mode">WORLD</b></div>
-      <div class="hudChip">Boss cleared: <b id="bossFlag">no</b></div>
-      <div class="hudChip">Cooldown: <b id="cd">0.0</b>s</div>
-    </div>
-
-    <div class="help">
-      WASD move • Shift sprint • Q/E rotate camera • Enter zones to battle • R restart
-    </div>
+  <div class="card">
+    <h1>Veilborn Oath Test Page</h1>
+    <p>If you can see this and the background is dark blue, GitHub Pages is working.</p>
+    <p id="status">Loading JS...</p>
   </div>
 
-  <!-- Top-right Party Panel -->
-  <div id="partyPanel" class="panel">
-    <div class="panel-edge"></div>
-    <div class="sectionTitle">Party</div>
-  </div>
-
-  <!-- Bottom battle UI -->
-  <div id="battleUI">
-    <div id="bottomBar">
-      <div id="actionBox" class="panel">
-        <div class="panel-edge"></div>
-        <div class="sectionTitle">Actions</div>
-        <div id="turnLabel" class="subtle">—</div>
-
-        <div id="actionButtons" class="btnrow"></div>
-
-        <div class="rules">Rule: Dread Art only at 100 dread; it consumes to 0.</div>
-        <div class="rules">No enemy HP bars — enemy HP is hidden.</div>
-      </div>
-
-      <div id="logBox" class="panel">
-        <div class="panel-edge"></div>
-        <div class="sectionTitle">Battle Log</div>
-        <div id="enemyName" class="enemyTag">—</div>
-        <div id="log"></div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Start / Result Overlay -->
-  <div id="overlay">
-    <div class="overlay-card">
-      <div class="panel-edge"></div>
-      <h1 id="overlayTitle">Veilborn Oath — Three.js Prototype</h1>
-      <p id="overlayText">Fresh browser prototype. Placeholder geometry, real loop.</p>
-      <div class="overlay-actions">
-        <button id="startBtn" class="primary">Start Prototype</button>
-        <button id="resetBtn">Reset Run</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Import map for browser ES modules -->
   <script type="importmap">
   {
     "imports": {
-      "three": "https://unpkg.com/three@0.160.1/build/three.module.js",
-      "three/addons/": "https://unpkg.com/three@0.160.1/examples/jsm/"
+      "three": "https://unpkg.com/three@0.160.1/build/three.module.js"
     }
   }
   </script>
