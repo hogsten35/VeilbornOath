@@ -97,8 +97,9 @@ const RetroDitherShader = {
     resolution: { value: new THREE.Vector2(640, 360) },
     colorSteps: { value: new THREE.Vector3(34, 32, 30) }, // more shadow detail
     ditherStrength: { value: 0.55 }, // less shadow crush
-    contrast: { value: 0.96 },       // reduce black crush
-    saturation: { value: 1.00 }      // restore color a bit
+    contrast: { value: 0.96 },       // softer blacks
+    saturation: { value: 1.00 }      // restore a little color
+
 
   },
   vertexShader: /* glsl */`
@@ -167,7 +168,7 @@ renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 renderer.outputColorSpace = THREE.SRGBColorSpace;
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
 renderer.toneMappingExposure = 1.18;
-renderer.setClearColor(0x050608, 1);
+renderer.setClearColor(0x090d13, 1);
 renderer.domElement.style.width = "100vw";
 renderer.domElement.style.height = "100vh";
 renderer.domElement.style.imageRendering = "pixelated";
@@ -774,11 +775,12 @@ function createBattleRoom() {
 
   // Floor disk (sewer chamber)
   const floorMat = new THREE.MeshStandardMaterial({
-    color: 0xffffff,
-    map: texStone,
-    roughness: 0.95,
-    metalness: 0.02
-  });
+  color: 0xd7e0ee,
+  map: texStone,
+  roughness: 0.92,
+  metalness: 0.03
+});
+
 
   const floor = new THREE.Mesh(new THREE.CircleGeometry(18, 64), floorMat);
   floor.rotation.x = -Math.PI / 2;
@@ -1561,6 +1563,7 @@ function endBattle(victory) {
 
 function renderActionUI() {
   ui.actionButtons.innerHTML = "";
+  ui.actionButtons.classList.add("btnrow");
 
   if (!battle.active || battle.phase !== "player_turn") {
     ui.turnLabel.textContent = battle.active ? "Enemy turn..." : "—";
@@ -1589,6 +1592,10 @@ function renderActionUI() {
   btnDread.onclick = () => playerDreadArt(actIdx);
 
   ui.actionButtons.append(btnAttack, btnSkill, btnDread);
+
+  // JRPG-ish default command highlight (pure visual)
+  const firstEnabled = [btnAttack, btnSkill, btnDread].find(b => !b.disabled);
+  if (firstEnabled) firstEnabled.classList.add("cmd-active");
 }
 
 function advanceTurnToNextLiving() {
@@ -1954,9 +1961,10 @@ function tick() {
     checkZones();
   } else {
     // battle ambience
-    scene.fog.color.setHex(0x07090f);
-    scene.fog.near = 14;
-    scene.fog.far = 58;
+   scene.fog.color.setHex(0x0a0f17);
+    scene.fog.near = 18;
+    scene.fog.far = 76;
+
 
     updateBattleCamera(dt, t);
     updateActorVisuals(dt, t);
