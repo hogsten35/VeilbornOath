@@ -1,91 +1,74 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta charset="UTF-8" />
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0, viewport-fit=cover"
+  />
   <title>Veilborn Oath — 3D Prototype</title>
   <link rel="stylesheet" href="./style.css" />
-
-  <!-- Three.js + addons via importmap (no build step) -->
-  <script type="importmap">
-    {
-      "imports": {
-        "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
-        "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
-      }
-    }
-  </script>
 </head>
 <body>
-  <div id="hud" class="vf-panel hud-panel">
-    <div class="panel-edge"></div>
-    <div class="title">Veilborn Oath — 3D Prototype</div>
-    <div class="sub">Explore → encounter zones → turn-based battle → return to world.</div>
-    <div class="row">
-      <div class="pill">Mode: <b id="mode">WORLD</b></div>
-      <div class="pill">Boss cleared: <b id="bossFlag">no</b></div>
-      <div class="pill">Cooldown: <b id="cd">0.0</b>s</div>
+  <!-- HUD: top-left -->
+  <div id="hudTopLeft" class="panel panel--info">
+    <div class="panel-glow"></div>
+    <h1>Veilborn Oath — 3D Prototype</h1>
+    <p class="sub">Explore → encounter zones → turn-based battle → return to world.</p>
+
+    <div class="chips">
+      <span class="chip">Mode: <b id="mode">WORLD</b></span>
+      <span class="chip">Boss cleared: <b id="bossFlag">no</b></span>
+      <span class="chip">Cooldown: <b id="cd">0.0</b>s</span>
     </div>
-    <div class="sub hintline">
-      WASD move • Shift sprint • Q/E rotate camera • Enter zones to battle • R restart
+
+    <div class="helpRow">
+      <span>WASD move</span>
+      <span>Shift sprint</span>
+      <span>Q / E camera rotate</span>
+      <span>R reset</span>
+      <span>V retro FX</span>
     </div>
   </div>
 
-  <div id="partyPanel" class="vf-panel"></div>
+  <!-- HUD: top-right -->
+  <div id="partyPanel" class="panel panel--party"></div>
 
-  <div id="battleUI">
-    <div id="actionBox" class="vf-panel action-panel">
-      <div class="panel-edge"></div>
-      <div class="actionHeader">
-        <span class="actionRune">◆</span>
-        <span class="sectionTitle">Actions</span>
+  <!-- Enemy name (battle only) -->
+  <div id="enemyName" class="enemyName" style="display:none;">Enemy</div>
+
+  <!-- Battle UI -->
+  <div id="battleUI" class="battle-ui" style="display:none;">
+    <div class="actions-shell">
+      <div class="actions-header">
+        <span class="diamond"></span>
+        <span>Actions</span>
       </div>
-
       <div id="turnLabel" class="turnLabel">—</div>
-
-      <div class="btnrow" id="actionButtons"></div>
-
+      <div id="actionButtons" class="actionButtons"></div>
       <div class="ruleText">
-        Rule: <b>Dread Art</b> only at <b>100</b> dread; it consumes to <b>0</b>.
-      </div>
-      <div class="ruleText">
-        No enemy HP bars — enemy HP is hidden.
+        Dread Art needs 100 dread. Enemy HP is hidden.
       </div>
     </div>
 
-    <div id="logBox" class="vf-panel log-panel">
-      <div class="panel-edge"></div>
-      <div class="logHeader">
-        <div class="sectionTitle">Battle Log</div>
-        <div id="enemyName" class="enemyLabel">—</div>
-      </div>
-      <div id="log"></div>
+    <div class="log-shell">
+      <div class="log-header">Battle Log</div>
+      <div id="log" class="log"></div>
     </div>
   </div>
 
-  <div id="overlay">
-    <div id="panel" class="vf-panel overlay-panel">
-      <div class="panel-edge"></div>
-      <h1 id="overlayTitle">Veilborn Oath — Three.js Prototype</h1>
+  <!-- Start / result overlay -->
+  <div id="overlay" class="overlay">
+    <div class="overlay-card">
+      <div class="overlay-shine"></div>
+      <h2 id="overlayTitle">Veilborn Oath — Three.js Prototype</h2>
       <p id="overlayText">
-        Browser prototype (Three.js). Placeholder geometry, but the gameplay loop is real.
+        Brightened prototype build for GitHub Pages. Placeholder 3D shapes, real loop.
       </p>
-
-      <div class="grid">
-        <div class="card"><b>World</b><br/>WASD move, Shift sprint, Q/E rotates camera. Step into zones to trigger battles.</div>
-        <div class="card"><b>Battle</b><br/>Turn-based. Party of 3. Enemy HP hidden. Dread Art only at 100 (consumes).</div>
-        <div class="card"><b>Boss</b><br/>One zone is a boss trigger. Beat it once and it disables.</div>
-        <div class="card"><b>Damage numbers</b><br/>Floating numbers are projected from 3D positions to screen space.</div>
+      <div class="overlay-actions">
+        <button id="startBtn" class="btn btn--primary">Start Prototype</button>
+        <button id="resetBtn" class="btn btn--ghost">Reset Run</button>
       </div>
-
-      <div class="btnrow">
-        <button class="primary" id="startBtn">Start Prototype</button>
-        <button id="resetBtn">Reset Run</button>
-      </div>
-
-      <p class="overlayTip">
-        Tip: wander into the glowing rings. The red ring is the boss.
-      </p>
     </div>
   </div>
 
