@@ -1,11 +1,13 @@
 :root {
   --bg: #090d14;
-  --panel: rgba(13, 19, 30, 0.84);
-  --line: rgba(144, 175, 226, 0.18);
-  --text: #e9f1ff;
-  --muted: #a8b6d1;
-  --gold: #f0bf6f;
-  --shadow: 0 12px 35px rgba(0, 0, 0, 0.45);
+  --panel: rgba(12, 18, 28, 0.82);
+  --panel-2: rgba(10, 14, 22, 0.88);
+  --line: rgba(139, 170, 226, 0.18);
+  --text: #eaf2ff;
+  --muted: #aebbd4;
+  --gold: #f3c27a;
+  --gold-2: #9f6a2f;
+  --shadow: 0 10px 28px rgba(0, 0, 0, 0.38);
 }
 
 * { box-sizing: border-box; }
@@ -27,28 +29,29 @@ canvas {
   z-index: 0;
 }
 
-/* ---------- Generic panels ---------- */
 .panel {
   position: fixed;
   z-index: 10;
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0)),
+    linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0)),
     var(--panel);
   border: 1px solid var(--line);
   border-radius: 16px;
   box-shadow: var(--shadow);
   overflow: hidden;
+  backdrop-filter: blur(4px);
 }
 
 .panel-glow {
   position: absolute;
   inset: 0 auto auto 0;
-  width: 160px;
-  height: 90px;
-  background: radial-gradient(circle at 10% 0%, rgba(118, 176, 255, 0.22), transparent 70%);
+  width: 180px;
+  height: 100px;
+  background: radial-gradient(circle at 0% 0%, rgba(116, 170, 255, 0.18), transparent 72%);
   pointer-events: none;
 }
 
+/* Top info */
 .panel--info {
   top: 14px;
   left: 14px;
@@ -78,9 +81,9 @@ canvas {
 
 .chip {
   font-size: 12px;
-  color: #d9e5ff;
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: #dbe8ff;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.08);
   padding: 4px 8px;
   border-radius: 999px;
 }
@@ -96,17 +99,17 @@ canvas {
 }
 
 .helpRow span {
-  background: rgba(255, 255, 255, 0.02);
-  border: 1px solid rgba(255, 255, 255, 0.05);
+  background: rgba(255,255,255,0.02);
+  border: 1px solid rgba(255,255,255,0.05);
   padding: 3px 7px;
   border-radius: 999px;
 }
 
-/* ---------- Party panel ---------- */
+/* Party panel */
 .panel--party {
   top: 14px;
   right: 14px;
-  width: 300px;
+  width: 280px;
   padding: 12px;
 }
 
@@ -122,8 +125,8 @@ canvas {
   padding: 10px;
   border-radius: 12px;
   background:
-    linear-gradient(180deg, rgba(255,255,255,0.025), rgba(255,255,255,0)),
-    rgba(10, 14, 22, 0.8);
+    linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0)),
+    rgba(9, 13, 21, 0.82);
   border: 1px solid rgba(255,255,255,0.06);
 }
 
@@ -154,7 +157,7 @@ canvas {
 
 .msub.ready {
   color: var(--gold);
-  text-shadow: 0 0 14px rgba(240, 191, 111, 0.25);
+  text-shadow: 0 0 12px rgba(243, 194, 122, 0.25);
 }
 
 .mstats {
@@ -164,27 +167,27 @@ canvas {
   line-height: 1.35;
 }
 
-/* ---------- Enemy name ---------- */
+/* Enemy name */
 .enemyName {
   position: fixed;
   top: 16px;
   left: 50%;
   transform: translateX(-50%);
   z-index: 12;
-  min-width: 220px;
+  min-width: 240px;
   text-align: center;
   padding: 10px 18px;
   border-radius: 999px;
   border: 1px solid rgba(255,255,255,0.12);
   background:
     linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0)),
-    rgba(11, 16, 24, 0.88);
+    rgba(10, 14, 22, 0.88);
   box-shadow: var(--shadow);
-  font-weight: 700;
+  font-weight: 800;
   letter-spacing: 0.3px;
 }
 
-/* ---------- Battle UI ---------- */
+/* Battle UI layout */
 .battle-ui {
   position: fixed;
   z-index: 11;
@@ -192,46 +195,46 @@ canvas {
   right: 12px;
   bottom: 12px;
   display: grid;
-  grid-template-columns: minmax(280px, 340px) 1fr;
+  grid-template-columns: minmax(280px, 330px) 1fr;
   gap: 12px;
   align-items: end;
 }
 
+/* Actions panel - more JRPG-ish */
 .actions-shell {
   position: relative;
   padding: 12px 12px 10px;
   color: var(--text);
   background:
-    radial-gradient(140px 90px at 0% 0%, rgba(240, 191, 111, 0.15), transparent 72%),
-    linear-gradient(180deg, rgba(255,255,255,0.035), rgba(255,255,255,0)),
-    rgba(12, 15, 22, 0.92);
-  border: 1px solid rgba(255, 214, 151, 0.22);
+    radial-gradient(180px 90px at 0% 0%, rgba(243, 194, 122, 0.10), transparent 72%),
+    linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0)),
+    rgba(11, 14, 21, 0.93);
+  border: 1px solid rgba(243, 194, 122, 0.18);
   box-shadow:
-    0 10px 30px rgba(0,0,0,0.45),
-    inset 0 1px 0 rgba(255,255,255,0.04);
+    0 10px 28px rgba(0,0,0,0.42),
+    inset 0 1px 0 rgba(255,255,255,0.05);
   border-radius: 14px;
+  overflow: hidden;
 }
 
 .actions-shell::before {
   content: "";
   position: absolute;
-  left: 12px;
-  right: 12px;
-  top: 34px;
-  height: 1px;
-  background: linear-gradient(90deg, rgba(255,214,151,0.0), rgba(255,214,151,0.22), rgba(255,214,151,0.0));
+  inset: 0;
+  background:
+    linear-gradient(120deg, rgba(243,194,122,0.08), transparent 30%),
+    linear-gradient(180deg, transparent 70%, rgba(243,194,122,0.03));
   pointer-events: none;
 }
 
 .actions-shell::after {
   content: "";
   position: absolute;
-  top: 0;
-  right: 0;
-  width: 28px;
-  height: 28px;
-  background: linear-gradient(135deg, rgba(255,214,151,0.18), rgba(255,214,151,0));
-  border-top-right-radius: 14px;
+  left: 12px;
+  right: 12px;
+  top: 34px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(243,194,122,0.2), transparent);
   pointer-events: none;
 }
 
@@ -239,18 +242,20 @@ canvas {
   display: flex;
   align-items: center;
   gap: 8px;
-  color: #ffe2b4;
+  color: #ffe5bf;
   font-weight: 800;
   letter-spacing: 0.3px;
   margin-bottom: 10px;
+  position: relative;
+  z-index: 1;
 }
 
 .diamond {
   width: 8px;
   height: 8px;
   transform: rotate(45deg);
-  background: linear-gradient(135deg, #ffd18b, #9e6a30);
-  box-shadow: 0 0 10px rgba(240, 191, 111, 0.35);
+  background: linear-gradient(135deg, #ffd18b, #a26a2d);
+  box-shadow: 0 0 10px rgba(243, 194, 122, 0.3);
   border-radius: 1px;
 }
 
@@ -259,6 +264,8 @@ canvas {
   font-size: 13px;
   margin-bottom: 8px;
   min-height: 18px;
+  position: relative;
+  z-index: 1;
 }
 
 .actionButtons {
@@ -266,54 +273,61 @@ canvas {
   flex-wrap: wrap;
   gap: 8px;
   margin-bottom: 8px;
+  position: relative;
+  z-index: 1;
 }
 
 .actionButtons button {
   appearance: none;
-  border: 1px solid rgba(255, 214, 151, 0.22);
-  color: #fff6e8;
-  font-weight: 700;
+  border: 1px solid rgba(243, 194, 122, 0.16);
+  color: #fff7ea;
+  font-weight: 800;
   font-size: 13px;
+  letter-spacing: 0.1px;
   padding: 10px 12px;
   min-width: 92px;
   border-radius: 10px;
   cursor: pointer;
   background:
-    linear-gradient(180deg, rgba(255,255,255,0.12), rgba(255,255,255,0.02)),
-    linear-gradient(180deg, #4a321a, #2c1c10);
+    linear-gradient(180deg, rgba(255,255,255,0.14), rgba(255,255,255,0.02)),
+    linear-gradient(180deg, #3e2a18, #24170e);
   box-shadow:
-    inset 0 1px 0 rgba(255,255,255,0.10),
-    0 6px 14px rgba(0,0,0,0.35);
+    inset 0 1px 0 rgba(255,255,255,0.08),
+    0 6px 14px rgba(0,0,0,0.34);
   transition: transform 120ms ease, filter 120ms ease, border-color 120ms ease;
 }
 
 .actionButtons button:hover:not(:disabled) {
   transform: translateY(-1px);
   filter: brightness(1.08);
-  border-color: rgba(255, 214, 151, 0.35);
+  border-color: rgba(243, 194, 122, 0.28);
 }
 
-.actionButtons button:active:not(:disabled) { transform: translateY(0); }
+.actionButtons button:active:not(:disabled) {
+  transform: translateY(0);
+}
 
 .actionButtons button.primary {
   background:
     linear-gradient(180deg, rgba(255,255,255,0.16), rgba(255,255,255,0.03)),
-    linear-gradient(180deg, #a46d33, #603b1a);
+    linear-gradient(180deg, #a36b33, #603a1a);
 }
 
 .actionButtons button:disabled {
-  opacity: 0.45;
+  opacity: 0.42;
   cursor: default;
-  filter: grayscale(0.2);
+  filter: grayscale(0.25);
 }
 
 .ruleText {
   color: #c7d3ec;
   font-size: 11px;
   line-height: 1.35;
+  position: relative;
+  z-index: 1;
 }
 
-/* ---------- Battle log ---------- */
+/* Log panel */
 .log-shell {
   min-height: 118px;
   max-height: 170px;
@@ -321,9 +335,9 @@ canvas {
   border-radius: 14px;
   border: 1px solid rgba(255,255,255,0.08);
   background:
-    radial-gradient(320px 120px at 20% 0%, rgba(102, 150, 255, 0.12), transparent 70%),
+    radial-gradient(360px 120px at 12% 0%, rgba(102,150,255,0.10), transparent 70%),
     linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0)),
-    rgba(10, 14, 22, 0.90);
+    rgba(8, 12, 20, 0.90);
   box-shadow: var(--shadow);
 }
 
@@ -349,7 +363,7 @@ canvas {
   border-radius: 999px;
 }
 
-/* ---------- Overlay ---------- */
+/* Overlay */
 .overlay {
   position: fixed;
   inset: 0;
@@ -358,7 +372,7 @@ canvas {
   place-items: center;
   background:
     radial-gradient(circle at 50% 30%, rgba(86, 128, 209, 0.12), transparent 55%),
-    rgba(4, 7, 11, 0.74);
+    rgba(4, 7, 11, 0.72);
 }
 
 .overlay-card {
@@ -369,7 +383,7 @@ canvas {
   border: 1px solid rgba(138, 176, 240, 0.22);
   background:
     linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0)),
-    rgba(11, 16, 24, 0.94);
+    rgba(10, 15, 23, 0.94);
   box-shadow: 0 20px 60px rgba(0,0,0,0.55);
   overflow: hidden;
 }
@@ -428,7 +442,7 @@ canvas {
   background: rgba(255,255,255,0.04);
 }
 
-/* ---------- Floating damage numbers ---------- */
+/* Floating numbers */
 .dmg {
   position: fixed;
   z-index: 30;
@@ -457,7 +471,6 @@ canvas {
     0 0 16px rgba(125, 255, 178, 0.20);
 }
 
-/* ---------- Mobile ---------- */
 @media (max-width: 900px) {
   .battle-ui {
     grid-template-columns: 1fr;
