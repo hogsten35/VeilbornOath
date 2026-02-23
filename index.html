@@ -1,73 +1,87 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta
-    name="viewport"
-    content="width=device-width, initial-scale=1.0, viewport-fit=cover"
-  />
-  <title>Veilborn Oath — 3D Prototype</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Veilborn Oath — 2.5D Battle Prototype</title>
   <link rel="stylesheet" href="./style.css" />
+
+  <!-- Three.js via importmap (no build step) -->
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+        "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+      }
+    }
+  </script>
 </head>
 <body>
-  <!-- HUD: top-left -->
-  <div id="hudTopLeft" class="panel panel--info">
+  <!-- Top-left info -->
+  <div id="hud" class="panel panel--info">
     <div class="panel-glow"></div>
-    <h1>Veilborn Oath — 3D Prototype</h1>
-    <p class="sub">Explore → encounter zones → turn-based battle → return to world.</p>
+    <h1>Veilborn Oath — 2.5D Prototype</h1>
+    <div class="sub">Explore → encounter zones → turn-based battle → return to world</div>
 
     <div class="chips">
-      <span class="chip">Mode: <b id="mode">WORLD</b></span>
-      <span class="chip">Boss cleared: <b id="bossFlag">no</b></span>
-      <span class="chip">Cooldown: <b id="cd">0.0</b>s</span>
+      <div class="chip">Mode: <b id="mode">WORLD</b></div>
+      <div class="chip">Boss cleared: <b id="bossFlag">no</b></div>
+      <div class="chip">Cooldown: <b id="cd">0.0</b>s</div>
     </div>
 
     <div class="helpRow">
       <span>WASD move</span>
       <span>Shift sprint</span>
-      <span>Q / E camera rotate</span>
+      <span>Q / E rotate camera</span>
+      <span>Enter zone to battle</span>
       <span>R reset</span>
-      <span>V retro FX</span>
     </div>
   </div>
 
-  <!-- HUD: top-right -->
+  <!-- Party panel -->
   <div id="partyPanel" class="panel panel--party"></div>
 
-  <!-- Enemy name (battle only) -->
-  <div id="enemyName" class="enemyName" style="display:none;">Enemy</div>
+  <!-- Enemy name plate (battle only) -->
+  <div id="enemyName" class="enemyName" style="display:none;">—</div>
 
   <!-- Battle UI -->
   <div id="battleUI" class="battle-ui" style="display:none;">
-    <div class="actions-shell">
+    <div class="actions-shell" id="actionBox">
       <div class="actions-header">
         <span class="diamond"></span>
         <span>Actions</span>
       </div>
+
       <div id="turnLabel" class="turnLabel">—</div>
+
       <div id="actionButtons" class="actionButtons"></div>
+
       <div class="ruleText">
-        Dread Art needs 100 dread. Enemy HP is hidden.
+        Rule: <b>Dread Art</b> only at <b>100</b> Dread (consumes to <b>0</b>).
+      </div>
+      <div class="ruleText" style="margin-top:4px;">
+        Enemy HP is hidden.
       </div>
     </div>
 
-    <div class="log-shell">
+    <div class="log-shell" id="logBox">
       <div class="log-header">Battle Log</div>
       <div id="log" class="log"></div>
     </div>
   </div>
 
-  <!-- Start / result overlay -->
+  <!-- Overlay -->
   <div id="overlay" class="overlay">
     <div class="overlay-card">
       <div class="overlay-shine"></div>
-      <h2 id="overlayTitle">Veilborn Oath — Three.js Prototype</h2>
+      <h2 id="overlayTitle">Veilborn Oath — 2.5D Prototype</h2>
       <p id="overlayText">
-        Brightened prototype build for GitHub Pages. Placeholder 3D shapes, real loop.
+        A browser prototype with PS1-inspired presentation: low-res rendering, 2.5D actors, and turn-based battles.
       </p>
+
       <div class="overlay-actions">
-        <button id="startBtn" class="btn btn--primary">Start Prototype</button>
-        <button id="resetBtn" class="btn btn--ghost">Reset Run</button>
+        <button class="btn btn--primary" id="startBtn">Start Prototype</button>
+        <button class="btn btn--ghost" id="resetBtn">Reset Run</button>
       </div>
     </div>
   </div>
